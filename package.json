@@ -1,0 +1,30 @@
+{
+  "name": "qiniu-uploader",
+  "version": "0.0.1",
+  "description": "基于现代浏览器的七牛上传前端插件",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lpreterite/qiniu-uploader.git"
+  },
+  "keywords": [
+    "qiniu",
+    "upload"
+  ],
+  "author": "packy-tang <lpreterite@126.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lpreterite/qiniu-uploader/issues"
+  },
+  "homepage": "https://github.com/lpreterite/qiniu-uploader#readme",
+  "dependencies": {
+    "axios": "^0.16.1",
+    "base-64": "^0.1.0",
+    "buffer": "^5.0.6",
+    "crc-32": "^1.0.1",
+    "js-cookie": "^2.1.4"
+  }
+}
