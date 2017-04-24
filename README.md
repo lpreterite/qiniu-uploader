@@ -34,7 +34,8 @@ upload.clearStorage(file);
 
 
 ## 疑问与坑
-目前分片上传三接口（mkblock、bput、mkfile）均不能捕获错误码（具体原因是未查明，只知道xhr.status为0并提示链接请求错误，如：ERR_CONTENT_LENGTH_MISMATCH），遇到此类情况统一返回错误（信息头为000的错误信息）
+1. 目前分片上传三接口（mkblock、bput、mkfile）均不能捕获错误码（具体原因是未查明，只知道xhr.status为0并提示链接请求错误，如：ERR_CONTENT_LENGTH_MISMATCH），遇到此类情况统一返回错误（信息头为000的错误信息）
+2. 单个文件上传的文件名称不需要UrlsafeBase64处理
 
 ## 其他
 日后再补上；
