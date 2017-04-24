@@ -27,7 +27,7 @@ export default function(host){
                 },
                 onUploadProgress
             }).then(handle, errorHandle);
-        }
+        },
         mkblock(token, block, chunk, onUploadProgress){
             return instance.post('/mkblk/'+block.size, chunk.blob, {
                 headers: {
@@ -36,7 +36,7 @@ export default function(host){
                 },
                 onUploadProgress
             }).then(handle, errorHandle);
-        }
+        },
         bput(token, block, chunk, bctx, onUploadProgress){
             return instance.post(`/bput/${bctx}/${block.offset}`, chunk.blob, {
                 headers: {
@@ -45,7 +45,7 @@ export default function(host){
                 },
                 onUploadProgress
             }).then(handle, errorHandle);
-        }
+        },
         mkfile(token, key, ctxList, size, onUploadProgress){
             return instance.post(`/mkfile/${size}/key/${key}`, ctxList, {
                 headers: {

@@ -35,7 +35,7 @@ export default class UploadManager{
         }else{
             const crc32 = await this._helper.crc(blob);
             options.onprogress( this._progress.stage('key').overall() );
-            const key = await this._helper.getKey(blob);
+            const key = await this._helper.calcEtag(blob);
             options.onprogress( this._progress.stage('access:key').overall() );
 
             const data = new FormData();
@@ -54,7 +54,7 @@ export default class UploadManager{
     async uploadBigFile(blob, token, options){
         const filesize = blob.size;
         options.onprogress( this._progress.stage('key').overall() );
-        const key = await this._helper.getKey(blob, options);
+        const key = await this._helper.getKey(blob);
         options.onprogress( this._progress.stage('access:key').overall() );
 
         const storage = this._helper.getStorage(key);

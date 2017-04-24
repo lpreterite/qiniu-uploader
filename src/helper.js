@@ -79,7 +79,7 @@ export class UploadHelper{
     block(blob, pointer = 0){
         const offset = pointer % this.options.blockSize;
         return {
-            size: pointer + this.options.blockSize > this.filesize ? this.filesize - pointer : this.options.blockSize,
+            size: pointer + this.options.blockSize > blob.size ? blob.size - pointer : this.options.blockSize,
             offset: offset,
             entire: offset === 0
         }
@@ -153,7 +153,7 @@ export class UploadHelper{
             .replace(/\//g,'_').replace(/\+/g,'-');
     }
     async getKey(blob){
-        const etag = await this._helper.calcEtag(blob);
+        const etag = await this.calcEtag(blob);
         console.log('etag:', etag);
         return base64encode(utf16to8(etag));
     }
