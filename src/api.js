@@ -1,59 +1,54 @@
 import axios from 'axios';
+import { RequestControl } from './helper';
 
-const ERROR_NETORK = '000';
-
-function handle(ctx){
-    return Promise.resolve(ctx.data);
-}
-function errorHandle(err){
-    if(err.response){
-        err.message = err.response.status+':'+err.response.data.error;
-    }else{
-        err.message = ERROR_NETORK+':'+err.message;
-    }
-    return Promise.reject(err);
-}
-
-export default function(host){
+export default function (host) {
     const instance = new axios.create({
         baseURL: host || '//up.qiniu.com'
     });
     return {
         instance: instance,
-        uploadfile(formData, onUploadProgress){
-            return instance.post('/', formData, {
+        uploadfile(formData) {
+            return new RequestControl({
+                instance,
+                url: '/',
+                data: formData,
                 headers: {
                     'Content-Type': 'multipart/form-data'
-                },
-                onUploadProgress
-            }).then(handle, errorHandle);
+                }
+            });
         },
-        mkblock(token, block, chunk, onUploadProgress){
-            return instance.post('/mkblk/'+block.size, chunk.blob, {
+        mkblock(token, block, chunk) {
+            return new RequestControl({
+                instance,
+                url: '/mkblk/' + block.size,
+                data: chunk.blob,
                 headers: {
                     'Content-Type': 'application/octet-stream',
                     'Authorization': 'UpToken ' + token
-                },
-                onUploadProgress
-            }).then(handle, errorHandle);
+                }
+            });
         },
-        bput(token, block, chunk, bctx, onUploadProgress){
-            return instance.post(`/bput/${bctx}/${block.offset}`, chunk.blob, {
+        bput(token, block, chunk, bctx) {
+            return new RequestControl({
+                instance,
+                url: `/bput/${bctx}/${block.offset}`,
+                data: chunk.blob,
                 headers: {
                     'Content-Type': 'application/octet-stream',
                     'Authorization': 'UpToken ' + token
-                },
-                onUploadProgress
-            }).then(handle, errorHandle);
+                }
+            });
         },
-        mkfile(token, key, ctxList, size, onUploadProgress){
-            return instance.post(`/mkfile/${size}/key/${key}`, ctxList, {
+        mkfile(token, key, ctxList, size) {
+            return new RequestControl({
+                instance,
+                url: `/mkfile/${size}/key/${key}`,
+                data: ctxList,
                 headers: {
                     'Content-Type': 'text/plain',
                     'Authorization': 'UpToken ' + token
-                },
-                onUploadProgress
-            }).then(handle, errorHandle);
+                }
+            });
         }
     };
 }
