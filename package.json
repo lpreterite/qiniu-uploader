@@ -1,5 +1,5 @@
 {
-  "name": "qiniu-uploader",
+  "name": "@packy-tang/qiniu-uploader",
   "version": "0.0.1",
   "description": "基于现代浏览器的七牛上传前端插件",
   "main": "lib/index.js",
@@ -21,7 +21,7 @@
     "build:es:watch": "npm run build:es -- --watch",
     "build:umd": "cross-env BABEL_ENV=umd NODE_ENV=development babel src --out-file dist/qiniu-uploader.js",
     "build:umd:watch": "npm run build:umd -- --watch",
-    "build:umd:min": "cross-env BABEL_ENV=umd NODE_ENV=production babel src --out-file dist/qiniu-uploader.min.js"
+    "build:umd:min": "uglifyjs dist/qiniu-uploader.js -o dist/qiniu-uploader.min.js -c -m"
   },
   "repository": {
     "type": "git",
@@ -52,12 +52,6 @@
     "babel-preset-stage-2": "^6.24.1",
     "cross-env": "^5.2.0",
     "rimraf": "^2.6.2",
-    "rollup": "^0.66.6",
-    "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-replace": "^2.1.0",
-    "rollup-plugin-uglify": "^6.0.0",
-    "rollup-watch": "^4.3.1"
+    "uglify-js": "^3.4.9"
   }
 }
