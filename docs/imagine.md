@@ -44,8 +44,9 @@
 
 ```js
 //打开文件选择器
-uploader.openFinder((files, uploader)=>{
-    uploader.upload(files, {
+uploader.openFinder(async (files, uploader)=>{
+    const fileKey = await uploader.getFileKey(file)
+    uploader.upload(fileKey, files[0], {
         onValid({file, fileKey}, uploader)=>{ return [] },
         onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },
         onUploadProgress({fileKey, loaded, total, progressStage, progressValue, blockIndex}, uploader)=>{},
@@ -84,7 +85,10 @@ function fileSchema(){
     }
 }
 
+const url = 'http://up-z2.qiniup.com'
+
 uploader.init({
+    url,
     onValid({file, fileKey}, uploader)=>{ return [] },
     onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },
     onUploadProgress({fileKey, loaded, total, progressStage, progressValue, blockIndex}, uploader)=>{},
@@ -92,7 +96,7 @@ uploader.init({
 
 export default {
     state: {
-        uploadUrl: "//upload.qiniu.com",
+        url,
         buckest: {},
         fileset: {}
     },
@@ -108,7 +112,7 @@ export default {
         },
         uploadFile(state, key){
             const { blob, onUploaded } = state.fileset[key]
-            uploader.upload(blob, {
+            uploader.upload(key, blob, {
                 onUploadProgress({progressValue}){
                     state.fileset[fileKey].value = progressValue
                     state.fileset[fileKey].type = 'loading'
@@ -163,4 +167,33 @@ export default {
     }
 }
 </script>
+```
+
+大致功能：
+
+```js
+//初次化
+uploader.init(options)
+//打开文件选择框
+uploader.openFinder((files,uploader)=>{})
+//上传文件
+uploader.upload(fileKey, file, options)
+//取消文件上传
+uploader.cancel(fileKey)
+//清除文件分片缓存
+uploader.clean(fileKey)
+
+// options
+const options = {
+    url: '',                         //上传地址
+    blockSize: 1<<22,                //分块大小
+    chunkSize: 1<<20,                //分片大小
+    cookiePrefix: 'QINIU_UPLOAD::',  //缓存cookie前缀
+    token: '',                       //上传凭证
+    onValid({file, fileKey}, uploader)=>{ return [] },                                                   //文件检测钩子
+    onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },                                //文件上传前钩子
+    onUploadProgress({fileKey, loaded, total, progressStage, progressValue, blockIndex}, uploader)=>{},  //文件上传中钩子
+    onUploaded({fileKey, result}, uploader)=>{},                                                         //文件上传成功钩子
+    onFail((errors, { isCancel }, uploader)=>{})                                                                   //上传失败钩子
+}
 ```
