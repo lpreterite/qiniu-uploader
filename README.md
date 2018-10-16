@@ -8,65 +8,47 @@
 
 ## How to use
 
-```html
-<template>
-  <div>
-    <button @click="onClick">Upload</button>
-  </div>
-</template>
+```js
+//打开文件选择器
+const token = "七牛上传授权token"
+uploader.openFinder(async (files, uploader)=>{
+    const fileKey = await uploader.getFileKey(file)
+    uploader.upload(fileKey, files[0], { token })
+});
 
-<script>
-import { UploadManager, getFileKey } from '@packy-tang/qiniu-uploader';
+//手动取消上传
+uploader.cancel()
+```
 
-const blockSize = 1<<22;
-const uploadManager = new UploadManager({ blockSize });
-const token = "your bucket token";
+## 功能
 
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  },
-  methods: {
-    onClick(){
-      return this.openFinder({})
-    },
-    openFinder({ accept = '*' }) {
-        const fileinput = document.createElement('input');
-        fileinput.type = 'file';
-        fileinput.accept = accept;
-        fileinput.style.display = "none";
-        fileinput.addEventListener('change', e => {
-            this._fileChanged(e);
-        }, false);
-        return fileinput.click();
-    },
-    _fileChanged(e){
-      this.upload(e.target.files[0])
-    },
-    async upload(file){
-      const fileKey = await getFileKey(file, blockSize);
-      const uploader = uploadManager.getUploader(fileKey, file, token);
-      uploader.onprogress((uploader)=>{
-          const total = Math.floor((uploader.status.total || 0) / 1024);
-          const uploaded = Math.floor((uploader.status.uploaded || 0) / 1024);
-          const blockIndex = uploader.status.block.index;
-          console.log(`上传进度：${uploader.progress.value}% - ${uploaded}kb / ${total}kb —— 当前块：${blockIndex} 当前阶段：${uploader.progress.stage}`);
-      });
-      uploader
-          .action()
-          .then(()=>{
-              console.log('上传成功');
-          })
-          .catch(e=>{
-              if(e.message.indexOf('000')) console.error('上传出现意外错误');
-              else if(e.message.indexOf('401')) console.error('未授权或授权过期，请检测token');
-              else console.error(e.message);
-          });
-    }
-  }
+```js
+//初次化
+uploader.init(options)
+//打开文件选择框
+uploader.openFinder((files,uploader)=>{})
+//获得文件唯一名
+uploader.getFileKey(file)
+//上传文件
+uploader.upload(fileKey, file, options)
+//取消文件上传
+uploader.cancel(fileKey)
+//清除文件分片缓存
+uploader.clean(fileKey)
+
+// options
+const options = {
+    url: '',                         //上传地址
+    blockSize: 1<<22,                //分块大小
+    chunkSize: 1<<20,                //分片大小
+    cookiePrefix: 'QINIU_UPLOAD::',  //缓存cookie前缀
+    token: '',                       //上传凭证
+    onValid({file, fileKey}, uploader)=>{ return [] },                                                   //文件检测钩子
+    onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },                                //文件上传前钩子
+    onUploadProgress({fileKey, loaded, total, progressStage, progressValue, blockIndex}, uploader)=>{},  //文件上传中钩子
+    onUploaded({fileKey, result}, uploader)=>{},                                                         //文件上传成功钩子
+    onFail((errors, { isCancel }, uploader)=>{})                                                                   //上传失败钩子
 }
-</script>
 ```
 
 ## 疑问与坑

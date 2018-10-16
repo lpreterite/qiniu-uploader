@@ -1,6 +1,6 @@
 {
   "name": "@packy-tang/qiniu-uploader",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "基于现代浏览器的七牛上传前端插件",
   "main": "lib/index.js",
   "module": "es/index.js",

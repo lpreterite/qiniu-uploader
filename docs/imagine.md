@@ -176,6 +176,8 @@ export default {
 uploader.init(options)
 //打开文件选择框
 uploader.openFinder((files,uploader)=>{})
+//获得文件唯一名
+uploader.getFileKey(file)
 //上传文件
 uploader.upload(fileKey, file, options)
 //取消文件上传
@@ -197,3 +199,9 @@ const options = {
     onFail((errors, { isCancel }, uploader)=>{})                                                                   //上传失败钩子
 }
 ```
+
+## 待优化
+
+- 换算文件唯一名非常好资源
+- 目前设计并不能支持暂停再上传功能的实现，需将上传文件及上传进度记录下来。
+- 需提供上传文件进度信息。
