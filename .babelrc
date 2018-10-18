@@ -1,0 +1,30 @@
+{
+    "env": {
+        "commonjs": {
+            "presets": [
+                ["env", {
+                    "useBuiltIns": false
+                }],
+                "stage-2"
+            ]
+        },
+        "es": {
+            "presets": [
+                ["env", {
+                    "useBuiltIns": false,
+                    "modules": false
+                }],
+                "stage-2"
+            ]
+        },
+        "umd": {
+            "presets": [
+                ["env", {
+                    "useBuiltIns": false,
+                    "modules": "umd"
+                }],
+                "stage-2"
+            ]
+        }
+    }
+}

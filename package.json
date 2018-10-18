@@ -1,10 +1,27 @@
 {
-  "name": "qiniu-uploader",
-  "version": "0.0.1",
+  "name": "@packy-tang/qiniu-uploader",
+  "version": "1.0.0",
   "description": "基于现代浏览器的七牛上传前端插件",
-  "main": "src/index.js",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "jsnext:main": "es/index.js",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rimraf lib dist es",
+    "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build:watch": "echo 'build && watch the COMMONJS version of the package - for other version, run specific tasks' && npm run build:commonjs:watch",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
+    "build:commonjs:watch": "npm run build:commonjs -- --watch",
+    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es",
+    "build:es:watch": "npm run build:es -- --watch",
+    "build:umd": "cross-env BABEL_ENV=umd NODE_ENV=development babel src --out-file dist/qiniu-uploader.js",
+    "build:umd:watch": "npm run build:umd -- --watch",
+    "build:umd:min": "uglifyjs dist/qiniu-uploader.js -o dist/qiniu-uploader.min.js -c -m"
   },
   "repository": {
     "type": "git",
@@ -27,5 +44,14 @@
     "crc-32": "^1.0.1",
     "crypto": "0.0.3",
     "js-cookie": "^2.1.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-2": "^6.24.1",
+    "cross-env": "^5.2.0",
+    "rimraf": "^2.6.2",
+    "uglify-js": "^3.4.9"
   }
 }
