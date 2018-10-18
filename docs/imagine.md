@@ -202,6 +202,113 @@ const options = {
 
 ## 待优化
 
-- 换算文件唯一名非常好资源
-- 目前设计并不能支持暂停再上传功能的实现，需将上传文件及上传进度记录下来。
-- 需提供上传文件进度信息。
+- 换算文件唯一名非常耗资源（可考虑使用worker方式并行计算每个块`toArrayBuffer`部分，降低耗时，Worker工具[rusha](https://github.com/srijs/rusha)了解一下）
+- 目前设计并不能支持暂停再上传功能的实现，需将上传文件及上传进度记录下来，需提供上传文件进度信息。
+- `upload`方法需返回Promise
+
+### 优化的设计猜想
+
+提供记录上传进度功能，就需要添加登记与移除文件操作，同时文件上传还得提供指定文件上传功能。文件进度的记录，单个文件只有`上传成功`、`上传中`、`上传失败`三种状态，大文件分片上传能提供暂停与继续上传功能，由此可得会多出`上传暂停`状态，上传进度需与本地分片记录进行同步。
+
+```html
+<template>
+    <div>
+        <div>
+            <button @click="uploader.openFinder(onFileChanged)">选择文件</button>
+        </div>
+        <ul>
+            <li v-for="(key,val) in fileset">
+                <div>
+                    filename: {{ key }}
+                </div>
+                <div>上传进度：{{val.progressValue}}% - {{val.loaded}}kb / {{val.total}}kb —— 当前块：{{val.blockIndex}} 当前阶段：{{val.progressStage}}</div>
+                <div v-if="val.errors.length > 0">{{ value.errors[0].message }}</div>
+                <div>
+                    <button v-if="val.blockCount>1 && val.progressStage !== 'cancel'">暂停</button>
+                    <button v-if="val.blockCount>1 && val.progressStage === 'cancel'">继续</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+</template>
+<script>
+import uploader from "@packy-tang/qiniu-uploader"
+export default {
+    data(){
+        return {
+            token: "",
+            uploader,
+            fileset: new Map()
+        }
+    },
+    mounted(){
+        uploader.init({
+            onChanged: ()=>{
+                this.fileset = uploader.getProgress()
+            }
+        })
+    },
+    methods: {
+        onFileChanged(files, uploader){
+            files.forEach(blob=>{
+                const key = md5(blob)
+                uploader.addFile(key, blob)
+            })
+            uploader.upload({ token: this.token })
+        }
+    }
+}
+</script>
+```
+
+部分功能发生改变
+
+```js
+//初次化
+uploader.init(options)
+//打开文件选择框
+uploader.openFinder((files,uploader)=>{})
+//获得文件唯一名
+uploader.getFileKey(file)
+//添加上传文件
+uploader.addFile(fileKey, file)
+//移除上传文件（同时清除分片缓存）
+uploader.removeFile(fileKey)
+//上传文件
+uploader.upload(fileKey, options)
+//上传进度
+uploader.getProgress(fileKey)
+//取消文件上传
+uploader.cancel(fileKey)
+//清除所有文件状态
+uploader.clean()
+//清除分片
+uploader.cleanStorage(fileKey)
+
+// options
+const options = {
+    url: '',                         //上传地址
+    blockSize: 1<<22,                //分块大小
+    chunkSize: 1<<20,                //分片大小
+    cookiePrefix: 'QINIU_UPLOAD::',  //缓存cookie前缀
+    token: '',                       //上传凭证
+    onValid({file, fileKey}, uploader)=>{ return [] },                                                   //文件检测钩子
+    onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },                                //文件上传前钩子
+    onUploadProgress(progress, uploader)=>{},  //文件上传中钩子
+    onUploaded({fileKey, result}, uploader)=>{},                                                         //文件上传成功钩子
+    onFail((errors, { isCancel }, uploader)=>{})                                                         //上传失败钩子
+}
+
+// progress
+const progress = {
+    fileKey: "",
+    fileBlob: null,
+    loaded: 0,
+    total: 0,
+    blockIndex: 1,
+    blockCount: 1,
+    value: 0,
+    stage: "uploading",
+    cancelTokenSource: null
+}
+```

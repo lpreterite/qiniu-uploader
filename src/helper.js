@@ -32,7 +32,7 @@ export function getBlockCount(blobSize, blockSize) {
     return Math.ceil(blobSize / blockSize);
 }
 
-export async function getSha1String(blob, blockSize) {
+export function getSha1String(blob, blockSize) {
     let sha1String = [];
     let blockCount = getBlockCount(blob.size, blockSize);
     for (var i = 0; i < blockCount; i++) {
@@ -40,11 +40,13 @@ export async function getSha1String(blob, blockSize) {
         let end = (i + 1) * blockSize;
         end = end > blob.size ? blob.size : end;
         // console.time(`toArrayBuffer|${start}:${end}`)
-        let arrayBuf = await toArrayBuffer(blob.slice(start, end));
+        // let arrayBuf = await toArrayBuffer(blob.slice(start, end));
         // console.timeEnd(`toArrayBuffer|${start}:${end}`)
-        sha1String.push(sha1(new Buffer(arrayBuf)));
+        // sha1String.push(sha1(new Buffer(arrayBuf)));
+
+        sha1String.push(toArrayBuffer(blob.slice(start, end)).then(arrayBuf=>sha1(new Buffer(arrayBuf))));
     }
-    return sha1String
+    return Promise.all(sha1String)
 }
 
 export function toArrayBuffer(blob) {
@@ -62,29 +64,29 @@ export function toArrayBuffer(blob) {
     });
 }
 
-export async function getFileKey(blob, blockSize) {
+export function getFileKey(blob, blockSize) {
     //calcEtag
     const blockCount = getBlockCount(blob.size, blockSize)
-    const sha1String = await getSha1String(blob, blockSize);
+    return getSha1String(blob, blockSize).then(sha1String => {
+        if (!sha1String.length) return 'Fto5o-5ea0sNMlW_75VgGJCv2AcJ';
 
-    if (!sha1String.length) return 'Fto5o-5ea0sNMlW_75VgGJCv2AcJ';
+        let sha1Buffer = Buffer.concat(sha1String, blockCount * 20);
+        let prefix = 0x16;
 
-    let sha1Buffer = Buffer.concat(sha1String, blockCount * 20);
-    let prefix = 0x16;
+        // 如果大于4M，则对各个块的sha1结果再次sha1
+        if (blockCount > 1) {
+            prefix = 0x96;
+            sha1Buffer = sha1(sha1Buffer);
+        }
 
-    // 如果大于4M，则对各个块的sha1结果再次sha1
-    if (blockCount > 1) {
-        prefix = 0x96;
-        sha1Buffer = sha1(sha1Buffer);
-    }
+        sha1Buffer = Buffer.concat(
+            [new Buffer([prefix]), sha1Buffer],
+            sha1Buffer.length + 1
+        );
 
-    sha1Buffer = Buffer.concat(
-        [new Buffer([prefix]), sha1Buffer],
-        sha1Buffer.length + 1
-    );
-
-    return sha1Buffer.toString('base64')
-        .replace(/\//g, '_').replace(/\+/g, '-');
+        return sha1Buffer.toString('base64')
+            .replace(/\//g, '_').replace(/\+/g, '-');
+    })
 }
 
 export function initBlock(blob, blockSize, pointer = 0) {
@@ -106,11 +108,12 @@ export function initChunk(blob, chunkSize, pointer = 0) {
 export function isBlockEnd(blob, blockSize, pointer) {
     return pointer % blockSize === 0 || pointer === blob.size;
 }
-export async function crc(blob) {
-    const arrayBuf = await toArrayBuffer(blob);
-    const data = new Uint8Array(arrayBuf);
-    const crc = buf(data) >>> 0;
-    return crc;
+export function crc(blob) {
+    return toArrayBuffer(blob).then(arrayBuf => {
+        const data = new Uint8Array(arrayBuf);
+        const crc = buf(data) >>> 0;
+        return crc;
+    })
 }
 export function urlsafeBase64(etag) {
     return base64encode(utf16to8(etag));
