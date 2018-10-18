@@ -1,5 +1,7 @@
 # qiniu-uploader
 
+[![npm version](https://img.shields.io/npm/v/@packy-tang/qiniu-uploader.svg)](https://www.npmjs.com/package/@packy-tang/qiniu-uploader)
+
 基于现代浏览器的七牛上传前端插件
 
 - [x] 生成唯一名
@@ -9,16 +11,29 @@
 ## How to use
 
 ```js
-//打开文件选择器
+import uploader from "@packy-tang/qiniu-uploader"
 const token = "七牛上传授权token"
-uploader.openFinder(async (files, uploader)=>{
-    const fileKey = await uploader.getFileKey(file)
-    uploader.upload(fileKey, files[0], { token })
-});
+
+//打开文件选择器
+uploader.openFinder((files, uploader)=>{
+    const file = files[0]
+    uploader.addFile(file.name, file)
+    uploader.upload(file.name, {
+        token,
+        onUploadProgress(progress){
+            console.log(`[${(progress.loaded/1024/1024).toFixed(2)}mb / ${(progress.total/1024/1024).toFixed(2)}mb]——${progress.value}%`)
+        },
+        onUploaded(){
+            alert("上传成功")
+        }
+    })
+})
 
 //手动取消上传
 uploader.cancel()
 ```
+
+[更多例子](https://github.com/lpreterite/qiniu-uploader-example)
 
 ## 功能
 
@@ -29,12 +44,20 @@ uploader.init(options)
 uploader.openFinder((files,uploader)=>{})
 //获得文件唯一名
 uploader.getFileKey(file)
+//添加上传文件
+uploader.addFile(fileKey, file)
+//移除上传文件（同时清除分片缓存）
+uploader.removeFile(fileKey)
 //上传文件
-uploader.upload(fileKey, file, options)
+uploader.upload(fileKey, options)
+//上传进度
+uploader.getProgress(fileKey)
 //取消文件上传
 uploader.cancel(fileKey)
-//清除文件分片缓存
-uploader.clean(fileKey)
+//清除所有文件状态
+uploader.clean()
+//清除分片
+uploader.cleanStorage(fileKey)
 
 // options
 const options = {
@@ -43,15 +66,24 @@ const options = {
     chunkSize: 1<<20,                //分片大小
     cookiePrefix: 'QINIU_UPLOAD::',  //缓存cookie前缀
     token: '',                       //上传凭证
-    onValid({file, fileKey}, uploader)=>{ return [] },                                                   //文件检测钩子
-    onBeforeUpload({file, fileKey}, uploader)=>{ return {file,fileKey} },                                //文件上传前钩子
-    onUploadProgress({fileKey, loaded, total, progressStage, progressValue, blockIndex}, uploader)=>{},  //文件上传中钩子
-    onUploaded({fileKey, result}, uploader)=>{},                                                         //文件上传成功钩子
-    onFail((errors, { isCancel }, uploader)=>{})                                                                   //上传失败钩子
+    onValid: ({file, fileKey}, uploader)=>{ return [] },                     //文件检测钩子
+    onBeforeUpload: ({file, fileKey}, uploader)=>{ return {file,fileKey} },  //文件上传前钩子
+    onUploadProgress: (progress, uploader)=>{},                              //文件上传中钩子
+    onUploaded: ({fileKey, result}, uploader)=>{},                           //文件上传成功钩子
+    onFail: (errors, { isCancel }, uploader)=>{},                            //上传失败钩子
+    onChanged: (progress)=>{}
+}
+
+// progress
+const progress = {
+    fileKey: "",             //文件名
+    blob: null,              //文件
+    loaded: 0,               //已上传(byte)
+    total: 0,                //需上传(byte)
+    blockIndex: 1,           //当前块
+    blockCount: 1,           //总块数
+    value: 0,                //进度
+    stage: "uploading",      //阶段
+    cancelTokenSource: null  //取消上传请求凭证（来自axios）
 }
 ```
-
-## 疑问与坑
-
-1. 目前分片上传三接口（mkblock、bput、mkfile）均不能捕获错误码（具体原因是未查明，只知道xhr.status为0并提示链接请求错误，如：ERR_CONTENT_LENGTH_MISMATCH），遇到此类情况统一返回错误（信息头为000的错误信息）
-2. 单个文件上传的文件名称不需要UrlsafeBase64处理
