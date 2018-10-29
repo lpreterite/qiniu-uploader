@@ -10,6 +10,14 @@
 
 ## How to use
 
+### install
+
+```sh
+npm install -S @packy-tang/qiniu-uploader
+```
+
+### use
+
 ```js
 import uploader from "@packy-tang/qiniu-uploader"
 const token = "七牛上传授权token"
